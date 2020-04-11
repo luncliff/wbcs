@@ -137,8 +137,8 @@ int main(int argc, char* argv[]) {
 }
 
 void get_asset_dir(gfs::path& dir) {
-#if defined(UTF8_ASSET_DIR)
-    dir = UTF8_ASSET_DIR;
+#if defined(ASSET_DIR)
+    dir = ASSET_DIR;
 #else
     dir = gfs::current_path();
 #endif
@@ -260,8 +260,8 @@ namespace bsys = boost::system;
 namespace bfs = boost::filesystem;
 
 uint32_t get_asset_dir(bfs::path& dir) {
-#if defined(UTF8_ASSET_DIR)
-    dir = UTF8_ASSET_DIR;
+#if defined(ASSET_DIR)
+    dir = {ASSET_DIR};
     return 0;
 #else
     bsys::error_code ec{};

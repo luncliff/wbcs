@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
 project(wbcs VERSION 1.0.0 LANGUAGES CXX)
 
 add_library(wbcs
@@ -120,11 +120,31 @@ target_include_directories(wbcs_test
 PRIVATE
     externals/include
 )
+
+# todo: fix the link error in Windows
+# for boost_filesystem, use vcpkg
 if(${CMAKE_TOOLCHAIN_FILE} MATCHES vcpkg.cmake)
+    message(STATUS "using vcpkg: ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
     target_include_directories(wbcs_test
     PRIVATE
         ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
     )
+    target_link_libraries(wbcs_test
+    PRIVATE
+        boost_filesystem
+    )
+    if(CMAKE_BUILD_TYPE MATCHES [Dd]ebug)
+        target_link_directories(wbcs_test
+        PRIVATE
+            ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
+        )
+    else()
+        target_link_directories(wbcs_test
+        PRIVATE
+            ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
+        )
+    endif()
+
 endif()
 
 target_link_libraries(wbcs_test
@@ -134,7 +154,7 @@ PRIVATE
 
 target_compile_definitions(wbcs_test
 PRIVATE
-    UTF8_ASSET_DIR=u8"${PROJECT_SOURCE_DIR}"
+    ASSET_DIR="${PROJECT_SOURCE_DIR}"
 )
 
 
