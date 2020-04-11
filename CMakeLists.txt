@@ -41,9 +41,11 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
         )
     endif()
 elseif(MSVC)
+    # https://docs.microsoft.com/en-us/cpp/build/reference/source-charset-set-source-character-set?view=vs-2019
     target_compile_options(wbcs
     PUBLIC
         /W4
+        /utf-8 # /source-charset:utf-8 /execution-charset:utf-8
     PRIVATE
         /Zc:__cplusplus
     )
@@ -54,7 +56,6 @@ if(WIN32)
     PROPERTIES
         WINDOWS_EXPORT_ALL_SYMBOLS True
     )
-
     target_link_libraries(wbcs
     PUBLIC
         ws2_32
@@ -103,10 +104,17 @@ add_executable(wbcs_test
     wbcs_test.cpp
 )
 
-set_target_properties(wbcs_test
-PROPERTIES
-    CXX_STANDARD 17
-)
+if(MSVC)
+    target_compile_options(wbcs_test
+    PRIVATE
+        /std:c++latest
+    )
+else()
+    set_target_properties(wbcs_test
+    PROPERTIES
+        CXX_STANDARD 17
+    )
+endif()
 
 target_include_directories(wbcs_test
 PRIVATE
@@ -129,9 +137,10 @@ PRIVATE
     UTF8_ASSET_DIR=u8"${PROJECT_SOURCE_DIR}"
 )
 
-add_test(NAME test_locale_native    COMMAND wbcs_test "")
 
 if(WIN32)
+    add_test(NAME test_locale_native    COMMAND wbcs_test "en_US.utf8")
 else()
+    add_test(NAME test_locale_native    COMMAND wbcs_test "")
     # add_test(NAME test_locale_posix     COMMAND wbcs_test "POSIX")
 endif()

@@ -21,8 +21,9 @@ jobs:
         parameters:
           toolset: v142
           cmake_work_dir: "build"
+          cmake_install_dir: $(Build.ArtifactStagingDirectory)
 
-  - job: ubuntu_cmake_clang8
+  - job: ubuntu_cmake_gcc9
     pool:
       vmImage: "ubuntu-latest"
     variables:
@@ -31,9 +32,9 @@ jobs:
     steps:
       - template: azure/steps-ubuntu.yml
         parameters:
-          cmake_cxx_compiler: "clang-8"
+          cmake_cxx_compiler: "g++-9"
           cmake_work_dir: "build"
-          cmake_install_dir: "../install"
+          cmake_install_dir: $(Build.ArtifactStagingDirectory)
 
   - job: mac_cmake_appleclang11
     pool:
@@ -45,4 +46,4 @@ jobs:
       - template: azure/steps-mac.yml
         parameters:
           cmake_work_dir: "build"
-          cmake_install_dir: "../install"
+          cmake_install_dir: $(Build.ArtifactStagingDirectory)

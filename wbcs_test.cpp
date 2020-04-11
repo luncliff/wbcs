@@ -1,6 +1,11 @@
-#if defined(_MSC_FULL_VER)
+/**
+ * @author luncliff (luncliff@gamil.com)
+ */
+// should be activated when /utf-8 is not specified
+#if defined(_MSC_FULL_VER) && !defined(_MBCS)
 #pragma setlocale(".65001")
 #endif
+
 #include <boost/ut.hpp>
 #include <ghc/filesystem.hpp>
 
@@ -38,27 +43,27 @@ void test_languages(FILE*) {
 
     "korean"_test = []() {
         const auto w = L"나의 사랑 한글날";
-        const auto mb = "나의 사랑 한글날";
+        const auto mb = R"(나의 사랑 한글날)";
         test_unicode_literal(w, mb);
     };
     "russian"_test = []() {
         const auto w = L"Сою́з Сове́тских Социалисти́ческих Респу́блик";
-        const auto mb = "Сою́з Сове́тских Социалисти́ческих Респу́блик";
+        const auto mb = R"(Сою́з Сове́тских Социалисти́ческих Респу́блик)";
         test_unicode_literal(w, mb);
     };
     "chinese"_test = []() {
         const auto w = L"分久必合 合久必分";
-        const auto mb = "分久必合 合久必分";
+        const auto mb = R"(分久必合 合久必分)";
         test_unicode_literal(w, mb);
     };
     "japanese"_test = []() {
         const auto w = L"おはようございます";
-        const auto mb = "おはようございます";
+        const auto mb = R"(おはようございます)";
         test_unicode_literal(w, mb);
     };
     "vietnamse"_test = []() {
         const auto w = L"Cộng hòa xã hội chủ nghĩa Việt Nam";
-        const auto mb = "Cộng hòa xã hội chủ nghĩa Việt Nam";
+        const auto mb = R"(Cộng hòa xã hội chủ nghĩa Việt Nam)";
         test_unicode_literal(w, mb);
     };
 }
@@ -66,7 +71,24 @@ void test_languages(FILE*) {
 void test_replace(FILE*) {
     using namespace testing;
 
-    "replace_space"_test = []() {
+    "replace_space_ascii"_test = []() {
+        const auto in = "expect space remains"s;
+        const auto out = wbcs_replace(in);
+        cout << in << ' ' << in.length() << endl;
+        cout << out << ' ' << out.length() << endl;
+        testing::expect(in.length() == out.length());
+
+        const auto exp = "expect\x20space\x20remains"s;
+        cout << exp << ' ' << exp.length() << endl;
+        testing::expect(out == exp);
+    };
+
+    "replace_delims"_test = []() {
+        const auto out = wbcs_replace("hello,world.11"s, "1,.", "!");
+        testing::expect(out == "hello!world!!!"s);
+    };
+
+    "replace_space_unicode"_test = []() {
         const auto in = "이게 현실인 거에요"s;
         const auto out = wbcs_replace(in);
         cout << in << ' ' << in.length() << endl;
@@ -76,10 +98,6 @@ void test_replace(FILE*) {
         const auto exp = "이게\x20현실인\x20거에요"s;
         cout << exp << ' ' << exp.length() << endl;
         testing::expect(out == exp);
-    };
-    "replace_delims"_test = []() {
-        const auto out = wbcs_replace("hello,world.11"s, "1,.", "!");
-        testing::expect(out == "hello!world!!!"s);
     };
 }
 
@@ -94,30 +112,26 @@ void test_stream(const gfs::path& asset_dir);
 /**
  * @details argv[1] is required for execution
  * ```
- * ${program} ""        // native locale
- * ${program} "POSIX"   // POSIX (C) locale
+ * ${wbcs_test} ""              // native locale
+ * ${wbcs_test} "POSIX"         // POSIX (C) locale
+ * ${wbcs_test} "en_US.utf8"    // in Windows
  * ```
+ * 
+ * @see     https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/setlocale-wsetlocale
  */
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        fputs("argv[1] is required\n", stderr);
-        return 1;
-    }
-    if (auto cat = setlocale(LC_ALL, argv[1]))
-        fprintf(stdout, "setlocale(LC_ALL): '%s' -> '%s'\n", argv[1], cat);
+    const char* locale = argc < 2 ? ".65001" : argv[1];
+    if (auto cat = setlocale(LC_ALL, locale))
+        fprintf(stdout, "setlocale(LC_ALL): '%s' -> '%s'\n", locale, cat);
 
     test_languages(stderr);
     test_replace(stderr);
-
-    using namespace testing;
-
-    "ghc_filesystem"_test = []() {
+    {
+        // support: <ghc/filesystem.hpp>
         gfs::path assets{};
         get_asset_dir(assets);
-        {
-            test_file(assets);
-            test_stream(assets);
-        }
+        test_file(assets);
+        test_stream(assets);
     };
     return 0;
 }
@@ -133,14 +147,14 @@ void get_asset_dir(gfs::path& dir) {
 auto file_open(const gfs::path& fpath) -> file_owner_t {
     FILE* fp{};
     if (auto ec = wbcs_open(&fp, fpath.generic_wstring()))
-        throw std::system_error{ec, std::system_category()};
+        throw system_error{static_cast<int>(ec), system_category()};
     return {fp, &fclose};
 }
 
 auto file_append(const gfs::path& fpath) -> file_owner_t {
     FILE* fp{};
     if (auto ec = wbcs_append(&fp, fpath.generic_wstring()))
-        throw std::system_error{ec, std::system_category()};
+        throw system_error{static_cast<int>(ec), system_category()};
     return {fp, &fclose};
 }
 
@@ -191,8 +205,16 @@ void test_file(const gfs::path& asset_dir) {
         const auto txt = fpath.generic_wstring();
         const auto flen = gfs::file_size(fpath);
 
-        const auto wsz = fwprintf(fp.get(), txt.c_str());
-        testing::eq(errno, 0); // no error for write
+        //
+        // currently fputws writes UTF-16 in Windows
+        // https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-s-wfopen-s?view=vs-2019#unicode-support
+        //
+        // @todo write in UTF-8 in Windows
+        //
+        const auto wsz = fputws(txt.c_str(), fp.get());
+        testing::eq(errno, 0);            // for system
+        testing::eq(ferror(fp.get()), 0); // for the stream
+
         testing::eq(txt.length(), wsz);
         testing::eq(gfs::file_size(fpath), flen + wsz); // appended?
     };
@@ -203,9 +225,10 @@ void test_file(const gfs::path& asset_dir) {
  */
 void test_stream(const gfs::path& asset_dir) {
     using namespace testing;
-    const auto fpath = asset_dir / u8"있는 파일";
+    const auto fpath = asset_dir / R"(있는 파일)";
+    const auto flen = gfs::file_size(fpath);
 
-    "istream"_test = [&fpath]() {
+    "istream"_test = [=, &fpath]() {
         std::ifstream fin{fpath.generic_string()};
         testing::expect(fin.is_open());
         testing::eq(wbcs_empty_locale(fin), 0); // reset the locale
@@ -214,8 +237,9 @@ void test_stream(const gfs::path& asset_dir) {
         std::getline(fin, utf8);
         testing::expect(utf8.empty() == false);
         cout << utf8 << endl;
+        testing::eq(utf8.length(), flen);
     };
-    "wistream"_test = [&fpath]() {
+    "wistream"_test = [=, &fpath]() {
         std::wifstream fin{fpath.generic_string()};
         testing::expect(fin.is_open());
         testing::eq(wbcs_empty_locale(fin), 0); // reset the locale
@@ -224,6 +248,7 @@ void test_stream(const gfs::path& asset_dir) {
         std::getline(fin, wtxt);
         testing::expect(wtxt.empty() == false);
         wcout << wtxt << endl;
+        testing::eq(wtxt.length(), flen);
     };
 }
 
