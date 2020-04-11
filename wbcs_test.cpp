@@ -133,14 +133,14 @@ void get_asset_dir(gfs::path& dir) {
 auto file_open(const gfs::path& fpath) -> file_owner_t {
     FILE* fp{};
     if (auto ec = wbcs_open(&fp, fpath.generic_wstring()))
-        throw std::system_error{ec, std::system_category()};
+        throw system_error{static_cast<int>(ec), system_category()};
     return {fp, &fclose};
 }
 
 auto file_append(const gfs::path& fpath) -> file_owner_t {
     FILE* fp{};
     if (auto ec = wbcs_append(&fp, fpath.generic_wstring()))
-        throw std::system_error{ec, std::system_category()};
+        throw system_error{static_cast<int>(ec), system_category()};
     return {fp, &fclose};
 }
 

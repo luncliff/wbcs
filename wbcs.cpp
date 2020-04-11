@@ -12,11 +12,11 @@
 #include "wbcs.hpp"
 
 #include <codecvt>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 
 static_assert(__cplusplus >= 201402L, "requires C++ 14 or later");
-static_assert(L_tmpnam >= 260, "expect 260 as minimum value of the path limit");
 
 using std::string;
 using std::wstring;
@@ -62,6 +62,8 @@ uint32_t wbcs_mb2w(const string& in, wstring& out) noexcept(false) {
 }
 
 #if defined(_WIN32)
+static_assert(L_tmpnam >= 260, "expect 260 as minimum value of the path limit");
+
 // uint32_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
 //     auto converter = new std::codecvt_utf8<wchar_t>{};
 //     s.imbue(std::locale(std::locale::empty(), converter));

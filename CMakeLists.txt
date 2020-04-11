@@ -129,6 +129,13 @@ PRIVATE
     UTF8_ASSET_DIR=u8"${PROJECT_SOURCE_DIR}"
 )
 
+if(MSVC)
+    target_compile_options(wbcs_test
+    PRIVATE
+        /std:c++latest
+    )
+endif()
+
 add_test(NAME test_locale_native    COMMAND wbcs_test "")
 
 if(WIN32)
