@@ -21,7 +21,7 @@ static_assert(L_tmpnam >= 260, "expect 260 as minimum value of the path limit");
 using std::string;
 using std::wstring;
 
-errno_t wbcs_w2mb(const wstring& in, string& out) noexcept(false) {
+uint32_t wbcs_w2mb(const wstring& in, string& out) noexcept(false) {
     out.reserve(MB_CUR_MAX * in.length()); /// @see wcsnlen
 
     mbstate_t state{};
@@ -38,7 +38,7 @@ errno_t wbcs_w2mb(const wstring& in, string& out) noexcept(false) {
     return 0;
 }
 
-errno_t wbcs_mb2w(const string& in, wstring& out) noexcept(false) {
+uint32_t wbcs_mb2w(const string& in, wstring& out) noexcept(false) {
     const auto sz = mblen(in.c_str(), in.length());
     if (sz < 0) // can't process
         return errno;
@@ -62,12 +62,12 @@ errno_t wbcs_mb2w(const string& in, wstring& out) noexcept(false) {
 }
 
 #if defined(_WIN32)
-// errno_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
+// uint32_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
 //     auto converter = new std::codecvt_utf8<wchar_t>{};
 //     s.imbue(std::locale(std::locale::empty(), converter));
 //     return errno;
 // }
-errno_t wbcs_empty_locale(std::istream& s) noexcept(false) {
+uint32_t wbcs_empty_locale(std::istream& s) noexcept(false) {
     auto converter = new std::codecvt_utf8<wchar_t>{};
     s.imbue(std::locale(std::locale::empty(), converter));
     return errno;
@@ -75,32 +75,32 @@ errno_t wbcs_empty_locale(std::istream& s) noexcept(false) {
 
 void wbcs_replace(const std::string& in, string& out, //
                   const char* delims, const char* replacement) noexcept {
-    static_assert(false, "not implemented");
+    out = in; // static_assert(false, "not implemented");
 }
 
-errno_t wbcs_open(FILE** ptr, const wstring& fpath) noexcept {
+uint32_t wbcs_open(FILE** ptr, const wstring& fpath) noexcept {
     if (ptr == nullptr)
         return EINVAL;
     return _wfopen_s(ptr, fpath.c_str(), L"rb, ccs=UNICODE");
 }
 
-errno_t wbcs_create(FILE** ptr, const wstring& fpath) noexcept {
+uint32_t wbcs_create(FILE** ptr, const wstring& fpath) noexcept {
     if (ptr == nullptr)
         return EINVAL;
     return _wfopen_s(ptr, fpath.c_str(), L"w+b");
 }
-errno_t wbcs_append(FILE** ptr, const wstring& fpath) noexcept {
+uint32_t wbcs_append(FILE** ptr, const wstring& fpath) noexcept {
     if (ptr == nullptr)
         return EINVAL;
     return _wfopen_s(ptr, fpath.c_str(), L"a+b");
 }
 #else
-errno_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
+uint32_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
     std::locale empty{};
     s.imbue(empty);
     return errno;
 }
-errno_t wbcs_empty_locale(std::istream& s) noexcept(false) {
+uint32_t wbcs_empty_locale(std::istream& s) noexcept(false) {
     std::locale empty{};
     s.imbue(empty);
     return errno;
@@ -120,7 +120,8 @@ void wbcs_replace(const std::string& in, string& out, //
 /**
  * @todo length check with `MB_CUR_MAX`
  */
-errno_t wbcs_open(FILE** ptr, const wstring& fpath, const char* mode) noexcept {
+uint32_t wbcs_open(FILE** ptr, const wstring& fpath,
+                   const char* mode) noexcept {
     if (ptr == nullptr) // ensure not-null before string operation ...
         return EINVAL;
 
@@ -135,17 +136,17 @@ errno_t wbcs_open(FILE** ptr, const wstring& fpath, const char* mode) noexcept {
     return 0;
 }
 
-errno_t wbcs_open(FILE** ptr, const std::wstring& fpath) noexcept {
+uint32_t wbcs_open(FILE** ptr, const std::wstring& fpath) noexcept {
     if (ptr == nullptr) // fail fast
         return EINVAL;
     return wbcs_open(ptr, fpath, "r");
 }
-errno_t wbcs_create(FILE** ptr, const std::wstring& fpath) noexcept {
+uint32_t wbcs_create(FILE** ptr, const std::wstring& fpath) noexcept {
     if (ptr == nullptr) // fail fast
         return EINVAL;
     return wbcs_open(ptr, fpath, "w+");
 }
-errno_t wbcs_append(FILE** ptr, const std::wstring& fpath) noexcept {
+uint32_t wbcs_append(FILE** ptr, const std::wstring& fpath) noexcept {
     if (ptr == nullptr) // fail fast
         return EINVAL;
     return wbcs_open(ptr, fpath, "a+");

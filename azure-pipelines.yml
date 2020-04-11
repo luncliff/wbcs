@@ -23,7 +23,7 @@ jobs:
           cmake_work_dir: "build"
           cmake_install_dir: $(Build.ArtifactStagingDirectory)
 
-  - job: ubuntu_cmake_clang8
+  - job: ubuntu_cmake_gcc9
     pool:
       vmImage: "ubuntu-latest"
     variables:
