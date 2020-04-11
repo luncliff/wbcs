@@ -10,11 +10,9 @@ steps:
     inputs:
       targetType: "inline"
       script: |
-        uname -a;
-        sudo bash ./scripts/setup-compilers-ubuntu.sh;
-        sudo apt install -y -qq --fix-missing rsync wget unzip;
+        sudo bash ./scripts/setup-ubuntu.sh;
         mkdir -p ${{ parameters.cmake_work_dir }};
-    displayName: "Install: compilers, libcxx"
+    displayName: "Setup: Ubuntu"
 
   - task: CMake@1
     inputs:
