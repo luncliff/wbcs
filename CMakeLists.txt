@@ -8,8 +8,7 @@ add_library(wbcs
 
 set_target_properties(wbcs
 PROPERTIES
-    CXX_STANDARD 14
-    PUBLIC_HEADER wbcs.hpp
+    PUBLIC_HEADER   wbcs.hpp
 )
 
 target_include_directories(wbcs
@@ -18,6 +17,11 @@ PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 PRIVATE
     externals/include
+)
+
+target_link_libraries(wbcs
+PUBLIC
+    ${CMAKE_DL_LIBS}
 )
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
@@ -29,24 +33,28 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
     PUBLIC
         stdc++
     )
+
 elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     if(WIN32)
         # clang-cl is not considered for now ...
     else()
         target_compile_options(wbcs
         PUBLIC
+            -std=c++14
             -stdlib=libc++
         PRIVATE
             -Wall -Wextra
         )
     endif()
+
 elseif(MSVC)
     target_compile_options(wbcs
     PUBLIC
-        /W4
+        /std:c++14 /W4
     PRIVATE
         /Zc:__cplusplus
     )
+
 endif()
 
 if(WIN32)
@@ -54,17 +62,18 @@ if(WIN32)
     PROPERTIES
         WINDOWS_EXPORT_ALL_SYMBOLS True
     )
-
     target_link_libraries(wbcs
     PUBLIC
         ws2_32
     )
-endif()
 
-target_link_libraries(wbcs
-PUBLIC
-    ${CMAKE_DL_LIBS}
-)
+elseif(APPLE)
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        message(STATUS "current configuration supports coverage report")
+        message(STATUS "  see: scripts/run-lcov.sh")
+    endif()
+
+endif()
 
 install(FILES           wbcs.hpp
         DESTINATION     ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}
@@ -75,6 +84,7 @@ install(TARGETS         wbcs
         LIBRARY         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         ARCHIVE         DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
         INCLUDES        DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+        PUBLIC_HEADER   DESTINATION ${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}
         FRAMEWORK       DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
@@ -105,7 +115,7 @@ add_executable(wbcs_test
 
 set_target_properties(wbcs_test
 PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD    17
 )
 
 target_include_directories(wbcs_test
@@ -126,7 +136,8 @@ PRIVATE
 
 target_compile_definitions(wbcs_test
 PRIVATE
-    UTF8_ASSET_DIR=u8"${PROJECT_SOURCE_DIR}"
+    UTF8_ASSET_DIR=u8"${PROJECT_SOURCE_DIR}/build"
+    W_ASSET_DIR=L"${PROJECT_SOURCE_DIR}/build"
 )
 
 if(MSVC)
