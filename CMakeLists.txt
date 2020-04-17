@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
 project(wbcs VERSION 1.0.0 LANGUAGES CXX)
 
 add_library(wbcs
@@ -48,9 +48,12 @@ elseif(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
     endif()
 
 elseif(MSVC)
+    # https://docs.microsoft.com/en-us/cpp/build/reference/source-charset-set-source-character-set?view=vs-2019
     target_compile_options(wbcs
     PUBLIC
         /std:c++14 /W4
+        /W4
+        /utf-8 # /source-charset:utf-8 /execution-charset:utf-8
     PRIVATE
         /Zc:__cplusplus
     )
@@ -113,20 +116,47 @@ add_executable(wbcs_test
     wbcs_test.cpp
 )
 
-set_target_properties(wbcs_test
-PROPERTIES
-    CXX_STANDARD    17
-)
+if(MSVC)
+    target_compile_options(wbcs_test
+    PRIVATE
+        /std:c++latest
+    )
+else()
+    set_target_properties(wbcs_test
+    PROPERTIES
+        CXX_STANDARD 17
+    )
+endif()
 
 target_include_directories(wbcs_test
 PRIVATE
     externals/include
 )
+
+# todo: fix the link error in Windows
+# for boost_filesystem, use vcpkg
 if(${CMAKE_TOOLCHAIN_FILE} MATCHES vcpkg.cmake)
+    message(STATUS "using vcpkg: ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
     target_include_directories(wbcs_test
     PRIVATE
         ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include
     )
+    target_link_libraries(wbcs_test
+    PRIVATE
+        boost_filesystem
+    )
+    if(CMAKE_BUILD_TYPE MATCHES [Dd]ebug)
+        target_link_directories(wbcs_test
+        PRIVATE
+            ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/debug/lib
+        )
+    else()
+        target_link_directories(wbcs_test
+        PRIVATE
+            ${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib
+        )
+    endif()
+
 endif()
 
 target_link_libraries(wbcs_test
@@ -150,6 +180,8 @@ endif()
 add_test(NAME test_locale_native    COMMAND wbcs_test "")
 
 if(WIN32)
+    add_test(NAME test_locale_native    COMMAND wbcs_test "en_US.utf8")
 else()
+    add_test(NAME test_locale_native    COMMAND wbcs_test "")
     # add_test(NAME test_locale_posix     COMMAND wbcs_test "POSIX")
 endif()

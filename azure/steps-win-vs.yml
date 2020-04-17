@@ -23,9 +23,14 @@ steps:
         vcpkg search boost-filesystem
         vcpkg install --triplet x64-windows boost-filesystem
 
+  - task: Cache@2
+    inputs:
+      key: "vcpkg_x64-windows"
+      path: "C:/vcpkg"
+
   - task: CMake@1
     inputs:
-      cmakeArgs: .. -A $(platform) -DBUILD_SHARED_LIBS=$(is_dynamic) -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DBUILD_TESTING=ON  -DCMAKE_INSTALL_PREFIX=${{ parameters.cmake_install_dir }}
+      cmakeArgs: .. -A $(platform) -DBUILD_SHARED_LIBS=$(is_dynamic) -DBUILD_TESTING=ON  -DCMAKE_INSTALL_PREFIX=${{ parameters.cmake_install_dir }}
       workingDirectory: ${{ parameters.cmake_work_dir }}
 
   - task: MSBuild@1

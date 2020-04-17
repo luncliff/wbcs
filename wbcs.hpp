@@ -8,9 +8,9 @@
  * @todo    <boost/filesystem.hpp>
  */
 #pragma once
-
 #include <clocale>
 #include <cstdio>
+#include <cwchar>
 #include <istream>
 #include <locale>
 #include <memory>
@@ -48,6 +48,9 @@ uint32_t wbcs_mb2w(const std::string& in, std::wstring& out) noexcept(false);
 // uint32_t wbcs_mb2w(const char* in, ptrdiff_t size,
 //                   std::wstring& out) noexcept(false);
 
+/**
+ * @param in        UTF-8 (multi-byte) string in `char`
+ */
 std::string wbcs_replace(const std::string& in, //
                          const char* delims = " ",
                          const char* replacement = "\x20") noexcept(false);

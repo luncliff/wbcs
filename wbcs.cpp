@@ -6,15 +6,21 @@
  * @see     https://github.com/google/leveldb/issues/755
  * @see     https://gist.github.com/luncliff/a39287deb3618b24e402839c5db4e74b
  */
-#if defined(_MSC_FULL_VER)
+// should be activated when /utf-8 is not specified
+#if defined(_MSC_FULL_VER) && !defined(_MBCS)
 #pragma setlocale(".65001")
 #endif
+
 #include "wbcs.hpp"
 
 #include <codecvt>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+
+#if defined(_WIN32)
+#include <mbstring.h>
+#endif
 
 static_assert(__cplusplus >= 201402L, "requires C++ 14 or later");
 
@@ -64,37 +70,47 @@ uint32_t wbcs_mb2w(const string& in, wstring& out) noexcept(false) {
 #if defined(_WIN32)
 static_assert(L_tmpnam >= 260, "expect 260 as minimum value of the path limit");
 
-// uint32_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
-//     auto converter = new std::codecvt_utf8<wchar_t>{};
-//     s.imbue(std::locale(std::locale::empty(), converter));
-//     return errno;
-// }
+uint32_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
+    return errno;
+}
 uint32_t wbcs_empty_locale(std::istream& s) noexcept(false) {
     auto converter = new std::codecvt_utf8<wchar_t>{};
     s.imbue(std::locale(std::locale::empty(), converter));
     return errno;
 }
 
-void wbcs_replace(const std::string& in, string& out, //
-                  const char* delims, const char* replacement) noexcept {
-    out = in; // static_assert(false, "not implemented");
+/**
+ * @todo    This is the most simple code. 
+ *          Need benchmark and optimization with `_mbslen`, `_mbscpy_s`, `_mbstok_s` ...
+ * @see     https://docs.microsoft.com/en-us/cpp/c-runtime-library/string-manipulation-crt
+ */
+uint32_t wbcs_replace(const std::string& in, string& out, //
+                      const char* delims, const char* replacement) noexcept {
+    const auto num_delims = strnlen(delims, 5);
+    const auto epos = delims + num_delims;
+    for (char ch : in) {
+        if (std::find(delims, epos, ch) != epos)
+            ch = *replacement;
+        out.push_back(ch);
+    }
+    return 0;
 }
 
 uint32_t wbcs_open(FILE** ptr, const wstring& fpath) noexcept {
     if (ptr == nullptr)
         return EINVAL;
-    return _wfopen_s(ptr, fpath.c_str(), L"rb, ccs=UNICODE");
+    return _wfopen_s(ptr, fpath.c_str(), L"rb, ccs=UTF-8");
 }
 
 uint32_t wbcs_create(FILE** ptr, const wstring& fpath) noexcept {
     if (ptr == nullptr)
         return EINVAL;
-    return _wfopen_s(ptr, fpath.c_str(), L"w+b");
+    return _wfopen_s(ptr, fpath.c_str(), L"w+b, ccs=UTF-8");
 }
 uint32_t wbcs_append(FILE** ptr, const wstring& fpath) noexcept {
     if (ptr == nullptr)
         return EINVAL;
-    return _wfopen_s(ptr, fpath.c_str(), L"a+b");
+    return _wfopen_s(ptr, fpath.c_str(), L"a+b, ccs=UTF-8");
 }
 #else
 uint32_t wbcs_empty_locale(std::wistream& s) noexcept(false) {
@@ -108,8 +124,8 @@ uint32_t wbcs_empty_locale(std::istream& s) noexcept(false) {
     return errno;
 }
 
-void wbcs_replace(const std::string& in, string& out, //
-                  const char* delims, const char* replacement) noexcept {
+uint32_t wbcs_replace(const std::string& in, string& out, //
+                      const char* delims, const char* replacement) noexcept {
     char* pos = const_cast<char*>(in.c_str());
     char* token = nullptr;
     while ((token = strsep(&pos, delims)) != nullptr) {
@@ -117,6 +133,7 @@ void wbcs_replace(const std::string& in, string& out, //
         if (pos) // we have next token
             out.append(replacement);
     }
+    return 0;
 }
 
 /**
@@ -159,8 +176,13 @@ uint32_t wbcs_append(FILE** ptr, const std::wstring& fpath) noexcept {
 string wbcs_replace(const std::string& in, //
                     const char* delims,
                     const char* replacement) noexcept(false) {
+    if (delims == nullptr || replacement == nullptr)
+        throw std::system_error{EINVAL, std::system_category()};
+
     string out{};
     out.reserve(MB_CUR_MAX * in.length());
-    wbcs_replace(in, out, delims, replacement);
+    if (auto ec = wbcs_replace(in, out, delims, replacement))
+        throw std::system_error{static_cast<int>(ec), std::system_category(),
+                                "wbcs_replace"};
     return out;
 }
