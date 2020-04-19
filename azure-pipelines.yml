@@ -47,3 +47,9 @@ jobs:
         parameters:
           cmake_work_dir: "build"
           cmake_install_dir: $(Build.ArtifactStagingDirectory)
+
+  - job: mac_sonarqube
+    pool:
+      vmImage: "macos-latest"
+    steps:
+      - template: azure/steps-mac-sonarqube.yml

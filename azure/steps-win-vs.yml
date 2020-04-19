@@ -14,7 +14,7 @@ steps:
   - task: Cache@2
     inputs:
       key: "vcpkg_x64-windows"
-      path: "C:/vcpkg"
+      path: "C:/vcpkg/installed"
 
   - task: PowerShell@2
     inputs:
@@ -22,11 +22,6 @@ steps:
       script: |
         vcpkg search boost-filesystem
         vcpkg install --triplet x64-windows boost-filesystem
-
-  - task: Cache@2
-    inputs:
-      key: "vcpkg_x64-windows"
-      path: "C:/vcpkg"
 
   - task: CMake@1
     inputs:

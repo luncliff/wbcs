@@ -51,11 +51,11 @@ elseif(MSVC)
     # https://docs.microsoft.com/en-us/cpp/build/reference/source-charset-set-source-character-set?view=vs-2019
     target_compile_options(wbcs
     PUBLIC
-        /std:c++14 /W4
-        /W4
         /utf-8 # /source-charset:utf-8 /execution-charset:utf-8
     PRIVATE
+        /W4
         /Zc:__cplusplus
+        /std:c++14 
     )
 
 endif()
@@ -172,13 +172,6 @@ PRIVATE
     UTF8_ASSET_DIR=u8"${ASSET_DIR}"
     W_ASSET_DIR=L"${ASSET_DIR}"
 )
-
-if(MSVC)
-    target_compile_options(wbcs_test
-    PRIVATE
-        /std:c++latest
-    )
-endif()
 
 if(WIN32)
     add_test(NAME test_locale_utf8      COMMAND wbcs_test "en_US.utf8")

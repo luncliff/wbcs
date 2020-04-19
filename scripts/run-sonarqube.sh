@@ -5,15 +5,21 @@
 #   - https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/
 #   - https://docs.travis-ci.com/user/sonarcloud/
 #
-sonar_key=${1:-"-----"}
+sonar_key=${1:-"$SONAR_KEY"}
 build_dir=${2:-"build"}
 
-if [ ${sonar_key} = "-----" ]; then
+if [ -z ${sonar_key} ]; then
   echo "sonar_key must be specified !!!"
   echo ""
   echo "run-sonarqube.sh \${sonar_login_key}"
   echo ""
-  exit 1;
+  echo "or,"
+  echo ""
+  echo "SONAR_KEY=\${sonar_login_key} run-sonarqube.sh"
+  echo ""
+  exit 1
+else
+  echo "sonar.login=${sonar_key}"
 fi
 
 # Download and unzip SonarQube Tools
@@ -31,7 +37,7 @@ zip_path="${scanner}-cli-4.2.0.1873-macosx.zip"
 if [[ -f ${zip_path} ]]; then
   unzip -qq -o ${zip_path}
 else
-  wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/${zip_path}
+  wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/${zip_path}
   unzip -qq -o ${zip_path}
 fi
 
