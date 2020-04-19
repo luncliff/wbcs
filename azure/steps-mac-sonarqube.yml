@@ -38,12 +38,12 @@ steps:
 
   - task: Bash@3
     inputs:
-      filePath: "scripts/run-lcov.sh"
+      filePath: "scripts/run-gcov.sh"
 
   - task: Bash@3
     inputs:
       targetType: "inline"
-      script: bash scripts/run-sonarqube.sh $(sonar_key)
+      script: bash scripts/run-sonar-wrapper.sh
     timeoutInMinutes: 5
 
   - task: SonarCloudAnalyze@1

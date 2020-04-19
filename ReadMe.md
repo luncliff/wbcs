@@ -1,3 +1,8 @@
+# WBCS
+
+[![Build Status](https://dev.azure.com/luncliff/personal/_apis/build/status/luncliff.wbcs?branchName=master)](https://dev.azure.com/luncliff/personal/_build/latest?definitionId=36&branchName=master) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=luncliff-wbcs&metric=coverage)](https://sonarcloud.io/dashboard?id=luncliff-wbcs)
+
+Wide Byte Character Set subroutines
 
 ### References
 

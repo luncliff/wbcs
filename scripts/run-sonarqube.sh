@@ -20,7 +20,7 @@ if [ -z ${sonar_key} ]; then
   exit 1
 fi
 
-# Download and unzip SonarQube Tools
+# Sonar build wrapper for Mac OS X
 wrapper="build-wrapper-macosx-x86"
 zip_path="${wrapper}.zip"
 if [[ -f ${zip_path} ]]; then
@@ -29,7 +29,10 @@ else
   wget -q https://sonarcloud.io/static/cpp/${wrapper}.zip
   unzip -qq -o ${zip_path}
 fi
+export PATH="${PATH}:$(pwd)/${wrapper}"
+echo "using wrapper: $(which ${wrapper})"
 
+# Sonar scanner cli has different name for unzipped directory
 scanner="sonar-scanner"
 zip_path="${scanner}-cli-4.2.0.1873-macosx.zip"
 if [[ -f ${zip_path} ]]; then
@@ -38,13 +41,9 @@ else
   wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/${zip_path}
   unzip -qq -o ${zip_path}
 fi
-
-# sonar scanner cli has different name for unzipped directory
 export PATH="${PATH}:$(pwd)/${scanner}-4.2.0.1873-macosx/bin"
 echo "using scanner: $(which ${scanner})"
 
-export PATH="${PATH}:$(pwd)/${wrapper}"
-echo "using wrapper: $(which ${wrapper})"
 
 ${wrapper} --version
 ${wrapper} --out-dir bw-output \
