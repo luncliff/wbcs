@@ -9,6 +9,9 @@ site
 
 .vscode
 
+*.info
+docs/coverage
+
 # Created by https://www.gitignore.io/api/c++,java,xcode,gradle,visualstudio,jetbrains+all,visualstudiocode
 # Edit at https://www.gitignore.io/?templates=c++,java,xcode,gradle,visualstudio,jetbrains+all,visualstudiocode
 
