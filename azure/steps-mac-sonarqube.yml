@@ -6,6 +6,12 @@
 #
 
 steps:
+  - task: Bash@3
+    inputs:
+      targetType: "inline"
+      script: |
+        brew install lcov;
+
   - task: SonarCloudPrepare@1
     inputs:
       SonarCloud: "luncliff-sonarcloud"
@@ -15,7 +21,7 @@ steps:
 
   - task: CMake@1
     inputs:
-      cmakeArgs: .. -DBUILD_SHARED_LIBS=true -DBUILD_TESTING=true -DCMAKE_BUILD_TYPE=Debug
+      cmakeArgs: .. -DCMAKE_CXX_FLAGS="--coverage" -DBUILD_SHARED_LIBS=true -DBUILD_TESTING=true -DCMAKE_BUILD_TYPE=Debug
       workingDirectory: build
 
   - task: CMake@1
@@ -29,6 +35,10 @@ steps:
       script: ctest --output-on-failure
       workingDirectory: build
     timeoutInMinutes: 1
+
+  - task: Bash@3
+    inputs:
+      filePath: "scripts/run-lcov.sh"
 
   - task: Bash@3
     inputs:

@@ -11,17 +11,12 @@ steps:
       targetType: "inline"
       script: systeminfo
 
-  - task: Cache@2
-    inputs:
-      key: "vcpkg_x64-windows"
-      path: "C:/vcpkg/installed"
-
   - task: PowerShell@2
     inputs:
       targetType: "inline"
       script: |
         vcpkg search boost-filesystem
-        vcpkg install --triplet x64-windows boost-filesystem
+        # vcpkg install --triplet x64-windows boost-filesystem
 
   - task: CMake@1
     inputs:

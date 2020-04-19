@@ -18,8 +18,6 @@ if [ -z ${sonar_key} ]; then
   echo "SONAR_KEY=\${sonar_login_key} run-sonarqube.sh"
   echo ""
   exit 1
-else
-  echo "sonar.login=${sonar_key}"
 fi
 
 # Download and unzip SonarQube Tools
