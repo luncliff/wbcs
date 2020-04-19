@@ -164,10 +164,13 @@ PRIVATE
     wbcs
 )
 
+# place for test assets
+get_filename_component(ASSET_DIR "${PROJECT_SOURCE_DIR}/build" ABSOLUTE)
+message(STATUS "using asset dir: ${ASSET_DIR}")
 target_compile_definitions(wbcs_test
 PRIVATE
-    UTF8_ASSET_DIR=u8"${PROJECT_SOURCE_DIR}/build"
-    W_ASSET_DIR=L"${PROJECT_SOURCE_DIR}/build"
+    UTF8_ASSET_DIR=u8"${ASSET_DIR}"
+    W_ASSET_DIR=L"${ASSET_DIR}"
 )
 
 if(MSVC)
@@ -177,10 +180,9 @@ if(MSVC)
     )
 endif()
 
-add_test(NAME test_locale_native    COMMAND wbcs_test "")
-
 if(WIN32)
-    add_test(NAME test_locale_native    COMMAND wbcs_test "en_US.utf8")
+    add_test(NAME test_locale_utf8      COMMAND wbcs_test "en_US.utf8")
+    # add_test(NAME test_locale_65001     COMMAND wbcs_test ".65001")
 else()
     add_test(NAME test_locale_native    COMMAND wbcs_test "")
     # add_test(NAME test_locale_posix     COMMAND wbcs_test "POSIX")

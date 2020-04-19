@@ -14,15 +14,21 @@
 #       ctest
 #   popd
 #   bash ./scripts/run-lcov.sh build   # <--- this file
+#   open ./docs/coverage/index.html
 #
 build_dir=${1:-"build"}
 save_dir=${2:-"docs/coverage"}
 info_file=${3:-"coverage.info"}
 
+# for fpath in $(find ${build_dir} -name *.gcda)
+# do
+#     gcov -abcf ${fpath}
+# done
+
 lcov --directory ${build_dir} --capture --output-file ${info_file}
 
-lcov --remove ${info_file} '/usr/*'          --output-file ${info_file}
-lcov --remove ${info_file} './externals/*'   --output-file ${info_file}
+lcov --remove ${info_file} '*/usr/*'          --output-file ${info_file}
+lcov --remove ${info_file} '*/externals/*'   --output-file ${info_file}
 lcov --remove ${info_file} '*_test.cpp'      --output-file ${info_file}
 lcov --list ${info_file}
 
