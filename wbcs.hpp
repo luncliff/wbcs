@@ -18,7 +18,7 @@
 
 /**
  * @param   in      `wchar_t` sequence to make MBCS
- * @param   out     `string` to append converted { @param in }
+ * @param   out     `string` to append converted `in`
  * @return  uint32_t `errno` from `wcrtomb`
  * 
  * @see     wcrtomb
@@ -28,13 +28,9 @@
  */
 uint32_t wbcs_w2mb(const std::wstring& in, std::string& out) noexcept(false);
 
-/// @todo   support `string_view`
-// uint32_t wbcs_w2mb(gsl::cwzstring<> in, ptrdiff_t size,
-//                   std::string& out) noexcept(false);
-
 /**
  * @param   in      `char` sequence to make WBCS
- * @param   out     `wstring` to append converted { @param in }
+ * @param   out     `wstring` to append converted `in`
  * @return  uint32_t `errno` from `mbrtowc`
  * 
  * @see     mbrtowc
@@ -43,10 +39,6 @@ uint32_t wbcs_w2mb(const std::wstring& in, std::string& out) noexcept(false);
  * @throw   std::bad_alloc
  */
 uint32_t wbcs_mb2w(const std::string& in, std::wstring& out) noexcept(false);
-
-/// @todo   support `wstring_view`
-// uint32_t wbcs_mb2w(const char* in, ptrdiff_t size,
-//                   std::wstring& out) noexcept(false);
 
 /**
  * @param in        UTF-8 (multi-byte) string in `char`
@@ -62,15 +54,15 @@ uint32_t wbcs_open(FILE** ptr, const std::wstring& fpath,
                    const char* mode) noexcept;
 
 /**
- * @brief `fopen` the file with "r"
+ * @brief   `fopen` the file with "r"
  */
 uint32_t wbcs_open(FILE** ptr, const std::wstring& fpath) noexcept;
 /**
- * @brief `fopen` the file with "w+"
+ * @brief   `fopen` the file with "w+"
  */
 uint32_t wbcs_create(FILE** ptr, const std::wstring& fpath) noexcept;
 /**
- * @brief `fopen` the file with "a+"
+ * @brief   `fopen` the file with "a+"
  */
 uint32_t wbcs_append(FILE** ptr, const std::wstring& fpath) noexcept;
 
