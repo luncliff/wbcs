@@ -16,6 +16,7 @@ repo_url: https://github.com/luncliff/wbcs
 nav:
   - Home: index.md
   - Functions: functions.md
+  - 한국어: index_ko_kr.md
 
 markdown_extensions:
   - admonition
